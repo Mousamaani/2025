@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة المخزون</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn-save {
+            background-color: #4CAF50;
+        }
+        .btn-clear {
+            background-color: #f44336;
+        }
+        .btn-edit {
+            background-color: #2196F3;
+        }
+        .btn-delete {
+            background-color: #ff9800;
+        }
+        .btn-sell {
+            background-color: #9c27b0;
+        }
+        button:hover {
+            opacity: 0.8;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            margin-left: 5px;
+        }
+        .tab.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .summary {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9f7ef;
+            border-radius: 4px;
+        }
+        .sell-form {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f3e5f5;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>نظام إدارة المخزون والبيع</h1>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="openTab('add-product')">إضافة منتج</div>
+            <div class="tab" onclick="openTab('inventory')">كشف المخزون</div>
+            <div class="tab" onclick="openTab('summary')">ملخص الأرباح</div>
+        </div>
+        
+        <div id="add-product" class="tab-content active">
+            <h2>إضافة/تعديل منتج</h2>
+            <form id="product-form">
+                <div class="form-group">
+                    <label for="product-name">اسم المنتج:</label>
+                    <input type="text" id="product-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-quantity">الكمية:</label>
+                    <input type="number" id="product-quantity" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="purchase-price">سعر الشراء:</label>
+                    <input type="number" id="purchase-price" min="0" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="sale-price">سعر البيع:</label>
+                    <input type="number" id="sale-price" min="0" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="notes">ملاحظات:</label>
+                    <textarea id="notes" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn-save">حفظ المنتج</button>
+                <button type="button" class="btn-clear" onclick="clearForm()">مسح النموذج</button>
+            </form>
+        </div>
+        
+        <div id="inventory" class="tab-content">
+            <h2>كشف المخزون</h2>
+            <table id="inventory-table">
+                <thead>
+                    <tr>
+                        <th>اسم المنتج</th>
+                        <th>الكمية</th>
+                        <th>سعر الشراء</th>
+                        <th>سعر البيع</th>
+                        <th>القيمة الإجمالية</th>
+                        <th>ملاحظات</th>
+                        <th>إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="inventory-body">
+                    <!-- سيتم ملؤها بالجافاسكريبت -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="summary" class="tab-content">
+            <h2>ملخص الأرباح</h2>
+            <div class="summary">
+                <p><strong>إجمالي قيمة المخزون:</strong> <span id="total-inventory-value">0</span></p>
+                <p><strong>إجمالي الأرباح المحتملة:</strong> <span id="total-profit">0</span></p>
+                <p><strong>إجمالي الأرباح المتحققة:</strong> <span id="actual-profit">0</span></p>
+                <p><strong>عدد المنتجات:</strong> <span id="total-products">0</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- نموذج البيع -->
+    <div id="sell-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+        <div style="background-color:white; padding:20px; border-radius:8px; width:400px;">
+            <h2 id="sell-product-title">بيع المنتج</h2>
+            <div class="form-group">
+                <label for="sell-quantity">الكمية المراد بيعها:</label>
+                <input type="number" id="sell-quantity" min="1" value="1">
+            </div>
+            <div class="form-group">
+                <label for="sell-price">سعر البيع (يمكن تعديله):</label>
+                <input type="number" id="sell-price" min="0" step="0.01">
+            </div>
+            <button class="btn-save" onclick="confirmSell()">تأكيد البيع</button>
+            <button class="btn-clear" onclick="cancelSell()">إلغاء</button>
+        </div>
+    </div>
+
+    <script>
+        // تهيئة المخزون إذا لم يكن موجودًا
+        if (!localStorage.getItem('inventory')) {
+            localStorage.setItem('inventory', JSON.stringify([]));
+        }
+        
+        // تهيئة سجل المبيعات إذا لم يكن موجودًا
+        if (!localStorage.getItem('sales')) {
+            localStorage.setItem('sales', JSON.stringify([]));
+        }
+
+        // متغيرات للبيع
+        let currentSellingProduct = null;
+
+        // تحميل المخزون عند بدء التشغيل
+        document.addEventListener('DOMContentLoaded', function() {
+            loadInventory();
+            updateSummary();
+        });
+
+        // إرسال النموذج
+        document.getElementById('product-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const product = {
+                name: document.getElementById('product-name').value,
+                quantity: parseInt(document.getElementById('product-quantity').value),
+                purchasePrice: parseFloat(document.getElementById('purchase-price').value),
+                salePrice: parseFloat(document.getElementById('sale-price').value),
+                notes: document.getElementById('notes').value,
+                id: Date.now() // استخدام الطوابع الزمنية كمعرف فريد
+            };
+            
+            let inventory = JSON.parse(localStorage.getItem('inventory'));
+            
+            // التحقق مما إذا كان المنتج موجودًا بالفعل (بالاسم)
+            const existingIndex = inventory.findIndex(p => p.name === product.name);
+            
+            if (existingIndex !== -1) {
+                // تحديث المنتج الموجود
+                inventory[existingIndex] = product;
+            } else {
+                // إضافة منتج جديد
+                inventory.push(product);
+            }
+            
+            localStorage.setItem('inventory', JSON.stringify(inventory));
+            loadInventory();
+            updateSummary();
+            clearForm();
+            alert('تم حفظ المنتج بنجاح!');
+        });
+
+        // تحميل المخزون في الجدول
+        function loadInventory() {
+            const inventory = JSON.parse(localStorage.getItem('inventory'));
+            const tbody = document.getElementById('inventory-body');
+            tbody.innerHTML = '';
+            
+            inventory.forEach(product => {
+                const row = document.createElement('tr');
+                const totalValue = product.quantity * product.purchasePrice;
+                const profit = product.quantity * (product.salePrice - product.purchasePrice);
+                
+                row.innerHTML = `
+                    <td>${product.name}</td>
+                    <td>${product.quantity}</td>
+                    <td>${product.purchasePrice.toFixed(2)}</td>
+                    <td>${product.salePrice.toFixed(2)}</td>
+                    <td>${totalValue.toFixed(2)}</td>
+                    <td>${product.notes || '-'}</td>
+                    <td>
+                        <button class="btn-edit" onclick="editProduct('${product.id}')">تعديل</button>
+                        <button class="btn-delete" onclick="deleteProduct('${product.id}')">حذف</button>
+                        <button class="btn-sell" onclick="showSellForm('${product.id}')">بيع</button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        // تحديث الملخص
+        function updateSummary() {
+            const inventory = JSON.parse(localStorage.getItem('inventory'));
+            const sales = JSON.parse(localStorage.getItem('sales'));
+            let totalInventoryValue = 0;
+            let totalPotentialProfit = 0;
+            let totalActualProfit = 0;
+            
+            inventory.forEach(product => {
+                totalInventoryValue += product.quantity * product.purchasePrice;
+                totalPotentialProfit += product.quantity * (product.salePrice - product.purchasePrice);
+            });
+            
+            sales.forEach(sale => {
+                totalActualProfit += (sale.salePrice - sale.purchasePrice) * sale.quantity;
+            });
+            
+            document.getElementById('total-inventory-value').textContent = totalInventoryValue.toFixed(2);
+            document.getElementById('total-profit').textContent = totalPotentialProfit.toFixed(2);
+            document.getElementById('actual-profit').textContent = totalActualProfit.toFixed(2);
+            document.getElementById('total-products').textContent = inventory.length;
+        }
+
+        // تعديل المنتج
+        function editProduct(id) {
+            const inventory = JSON.parse(localStorage.getItem('inventory'));
+            const product = inventory.find(p => p.id == id);
+            
+            if (product) {
+                document.getElementById('product-name').value = product.name;
+                document.getElementById('product-quantity').value = product.quantity;
+                document.getElementById('purchase-price').value = product.purchasePrice;
+                document.getElementById('sale-price').value = product.salePrice;
+                document.getElementById('notes').value = product.notes || '';
+                
+                // حذف المنتج القديم إذا تم حفظه (لتجنب التكرار)
+                localStorage.setItem('inventory', JSON.stringify(inventory.filter(p => p.id != id)));
+                
+                // الانتقال إلى تبويب الإضافة
+                openTab('add-product');
+            }
+        }
+
+        // حذف المنتج
+        function deleteProduct(id) {
+            if (confirm('هل أنت متأكد من أنك تريد حذف هذا المنتج؟')) {
+                const inventory = JSON.parse(localStorage.getItem('inventory'));
+                const updatedInventory = inventory.filter(p => p.id != id);
+                localStorage.setItem('inventory', JSON.stringify(updatedInventory));
+                loadInventory();
+                updateSummary();
+                alert('تم حذف المنتج بنجاح!');
+            }
+        }
+
+        // عرض نموذج البيع
+        function showSellForm(id) {
+            const inventory = JSON.parse(localStorage.getItem('inventory'));
+            const product = inventory.find(p => p.id == id);
+            
+            if (product) {
+                currentSellingProduct = product;
+                document.getElementById('sell-product-title').textContent = `بيع ${product.name}`;
+                document.getElementById('sell-quantity').max = product.quantity;
+                document.getElementById('sell-quantity').value = 1;
+                document.getElementById('sell-price').value = product.salePrice;
+                document.getElementById('sell-modal').style.display = 'flex';
+            }
+        }
+
+        // تأكيد البيع
+        function confirmSell() {
+            const sellQuantity = parseInt(document.getElementById('sell-quantity').value);
+            const sellPrice = parseFloat(document.getElementById('sell-price').value);
+            
+            if (sellQuantity <= 0) {
+                alert('الكمية يجب أن تكون أكبر من الصفر');
+                return;
+            }
+            
+            if (sellQuantity > currentSellingProduct.quantity) {
+                alert('الكمية المراد بيعها أكبر من الكمية المتاحة في المخزن');
+                return;
+            }
+            
+            // تحديث المخزون
+            let inventory = JSON.parse(localStorage.getItem('inventory'));
+            const productIndex = inventory.findIndex(p => p.id === currentSellingProduct.id);
+            
+            inventory[productIndex].quantity -= sellQuantity;
+            
+            // إذا كانت الكمية صفر، يمكن حذف المنتج أو تركه
+            if (inventory[productIndex].quantity === 0) {
+                if (confirm('لقد نفذت كمية هذا المنتج. هل تريد حذفه من المخزون؟')) {
+                    inventory = inventory.filter(p => p.id !== currentSellingProduct.id);
+                }
+            }
+            
+            localStorage.setItem('inventory', JSON.stringify(inventory));
+            
+            // تسجيل عملية البيع
+            const sales = JSON.parse(localStorage.getItem('sales'));
+            sales.push({
+                productId: currentSellingProduct.id,
+                productName: currentSellingProduct.name,
+                quantity: sellQuantity,
+                purchasePrice: currentSellingProduct.purchasePrice,
+                salePrice: sellPrice,
+                date: new Date().toISOString()
+            });
+            localStorage.setItem('sales', JSON.stringify(sales));
+            
+            // إغلاق النموذج وتحديث البيانات
+            cancelSell();
+            loadInventory();
+            updateSummary();
+            alert('تم تسجيل عملية البيع بنجاح!');
+        }
+
+        // إلغاء البيع
+        function cancelSell() {
+            document.getElementById('sell-modal').style.display = 'none';
+            currentSellingProduct = null;
+        }
+
+        // مسح النموذج
+        function clearForm() {
+            document.getElementById('product-form').reset();
+        }
+
+        // تبديل التبويبات
+        function openTab(tabName) {
+            const tabs = document.getElementsByClassName('tab');
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+            
+            document.getElementsByClassName('tab')[['add-product', 'inventory', 'summary'].indexOf(tabName)].classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+    </script>
+</body>
+</html>
